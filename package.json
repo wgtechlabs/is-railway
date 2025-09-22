@@ -1,0 +1,74 @@
+{
+  "name": "is-railway",
+  "version": "1.0.0",
+  "description": "Simple Railway environment detection SDK for Node.js applications",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "preinstall": "npx only-allow pnpm",
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src/**/*.ts",
+    "clean": "rimraf dist",
+    "prepublishOnly": "pnpm run clean && pnpm run build && pnpm test"
+  },
+  "packageManager": "pnpm@8.15.0",
+  "keywords": [
+    "railway",
+    "environment",
+    "detection",
+    "postgresql",
+    "ssl",
+    "node",
+    "typescript",
+    "sdk",
+    "cloud",
+    "deployment"
+  ],
+  "author": "Waren Gonzaga <waren@wgtechlabs.com> (https://warengonzaga.com)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wgtechlabs/is-railway.git"
+  },
+  "bugs": {
+    "url": "https://github.com/wgtechlabs/is-railway/issues"
+  },
+  "homepage": "https://github.com/wgtechlabs/is-railway#readme",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.36.0",
+    "@types/node": "^24.5.2",
+    "@typescript-eslint/eslint-plugin": "^8.44.0",
+    "@typescript-eslint/parser": "^8.44.0",
+    "eslint": "^9.36.0",
+    "only-allow": "^1.2.1",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.6.3",
+    "vitest": "^3.2.4"
+  },
+  "pnpm": {
+    "overrides": {
+      "esbuild": ">=0.25.0"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@wgtechlabs/log-engine": "^2.2.0"
+  }
+}
