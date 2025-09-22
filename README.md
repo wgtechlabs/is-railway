@@ -1,16 +1,19 @@
-# is-railway
+# is-railway 🚂
 
-A lightweight SDK for detecting Railway environment in Node.js applications and automatically configuring PostgreSQL connections for Railway compatibility.
+A lightweight, intelligent SDK for detecting Railway environment in Node.js applications and automatically configuring PostgreSQL connections for Railway compatibility.
 
-## Features
+## ✨ Features
 
-- 🚂 **Railway Detection** - Automatically detect if your app is running on Railway
-- 🔧 **PostgreSQL Helper** - Auto-configure PostgreSQL connections for Railway's SSL setup
-- 🪶 **Zero Dependencies** - No external runtime dependencies
-- 📦 **TypeScript First** - Built with TypeScript, includes type definitions
-- 🎯 **Simple API** - Just a few functions, easy to use
+- 🚂 **Smart Railway Detection** - Automatically detect if your app is running on Railway
+- 🔧 **PostgreSQL Magic** - Auto-configure PostgreSQL connections for Railway's SSL setup  
+- 🪶 **Zero Dependencies** - No external runtime dependencies (except optional logging)
+- 📦 **TypeScript First** - Built with TypeScript, includes comprehensive type definitions
+- 🎯 **Simple API** - Just a few functions, easy to use and understand
+- 🔍 **Intelligent Logging** - Professional logging with WG Tech Labs log-engine integration
+- ⚡ **Performance Optimized** - Minimal overhead, maximum efficiency
+- 🛡️ **Production Ready** - Battle-tested and secure
 
-## Installation
+## 📦 Installation
 
 ```bash
 # Using pnpm (recommended)
@@ -23,7 +26,7 @@ npm install is-railway
 yarn add is-railway
 ```
 
-## Quick Start
+## 🚀 Quick Start
 
 ```typescript
 import { isRailway, getPostgresConfig } from 'is-railway';
@@ -33,7 +36,7 @@ if (isRailway()) {
   console.log('🚂 Running on Railway!');
   
   // Get Railway-optimized PostgreSQL config
-  const config = getPostgresConfig(process.env.DATABASE_URL);
+  const config = getPostgresConfig(process.env.POSTGRES_URL);
   
   // Use the config with your PostgreSQL client
   const pool = new Pool({
@@ -43,7 +46,7 @@ if (isRailway()) {
 }
 ```
 
-## API Reference
+## 🎯 Core Functions
 
 ### `isRailway(): boolean`
 
@@ -114,16 +117,125 @@ console.log('SSL settings:', config.ssl);
 
 ## Environment Variables Checked
 
-The package automatically checks these environment variables for Railway hostnames:
+The package automatically detects Railway by checking these core environment variables:
 
-- `DATABASE_URL`
-- `POSTGRES_URL`
-- `POSTGRESQL_URL`
-- `REDIS_URL`
-- `PLATFORM_REDIS_URL`
-- `WEBHOOK_REDIS_URL`
-- `MONGODB_URL`
-- `MYSQL_URL`
+- **`POSTGRES_URL`** - PostgreSQL database connection (Railway's primary database service)
+- **`REDIS_URL`** - Redis connection (Railway's caching service)
+
+These variables are checked for `railway.internal` hostnames to determine Railway environment.
+
+## 🔥 Advanced Usage
+
+### PostgreSQL with Custom SSL Configuration
+
+```typescript
+import { getPostgresConfig } from 'is-railway';
+
+// Custom SSL configuration
+const config = getPostgresConfig(process.env.POSTGRES_URL, {
+  rejectUnauthorized: false,    // Railway compatibility
+  forceSSL: true,              // Force SSL even locally
+  enableLogging: true          // Enable smart logging
+});
+
+const pool = new Pool({
+  connectionString: config.connectionString,
+  ssl: config.ssl,
+  max: 20,                     // Railway can handle more connections
+  idleTimeoutMillis: 30000
+});
+```
+
+### Environment-Specific Application Configuration
+
+```typescript
+import { isRailway, getRailwayConfig } from 'is-railway';
+
+const railwayConfig = getRailwayConfig();
+
+const appConfig = {
+  port: process.env.PORT || 3000,
+  ssl: railwayConfig.ssl,
+  environment: railwayConfig.environment,
+  
+  // Railway-specific optimizations
+  ...(railwayConfig.isRailway && {
+    trustProxy: true,
+    compression: true,
+    logging: 'info'
+  }),
+  
+  // Local development settings
+  ...(!railwayConfig.isRailway && {
+    cors: { origin: 'http://localhost:3000' },
+    logging: 'debug'
+  })
+};
+```
+
+### Smart Database Connection Manager
+
+```typescript
+import { isRailway, getPostgresConfig } from 'is-railway';
+import { Pool } from 'pg';
+
+class DatabaseManager {
+  private pool: Pool;
+
+  constructor() {
+    const config = getPostgresConfig(process.env.POSTGRES_URL);
+    
+    this.pool = new Pool({
+      ...config,
+      max: isRailway() ? 25 : 5,        // Scale pool based on environment
+      ssl: config.ssl
+    });
+
+    // Railway-specific error handling
+    this.pool.on('error', (err, client) => {
+      console.error('Database error:', err);
+      if (isRailway()) {
+        // Railway-specific error reporting
+        this.reportToMonitoring(err);
+      }
+    });
+  }
+
+  async healthCheck() {
+    const railwayInfo = getRailwayConfig();
+    const client = await this.pool.connect();
+    
+    try {
+      await client.query('SELECT 1');
+      return {
+        status: 'healthy',
+        environment: railwayInfo.environment,
+        isRailway: railwayInfo.isRailway
+      };
+    } finally {
+      client.release();
+    }
+  }
+}
+```
+
+## 🎨 Logging Integration
+
+The package includes optional integration with `@wgtechlabs/log-engine` for professional logging:
+
+```typescript
+// Automatic smart logging when Railway overrides user preferences
+const config = getPostgresConfig(process.env.POSTGRES_URL, {
+  rejectUnauthorized: true,  // This will be overridden on Railway
+  enableLogging: true        // Enable helpful warnings
+});
+
+// Console output on Railway:
+// [11:32AM][WARN]: Railway detected: Overriding rejectUnauthorized=true to false for Railway compatibility
+
+// Console output locally:
+// [11:32AM][INFO]: Local environment detected: Added sslmode=disable for optimal PostgreSQL performance
+```
 
 ## TypeScript Support
 

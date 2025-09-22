@@ -24,14 +24,8 @@ LogEngine.configure({
  * These are checked for 'railway.internal' hostnames
  */
 const RAILWAY_ENV_VARS = [
-  'DATABASE_URL',
-  'POSTGRES_URL', 
-  'POSTGRESQL_URL',
+  'POSTGRES_URL',
   'REDIS_URL',
-  'PLATFORM_REDIS_URL',
-  'WEBHOOK_REDIS_URL',
-  'MONGODB_URL',
-  'MYSQL_URL'
 ] as const;
 
 /**
