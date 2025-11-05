@@ -192,6 +192,9 @@ jobs:
           name: build-artifacts
           path: .
 
+      - name: 📦 Install Dependencies
+        run: pnpm install --frozen-lockfile --prod
+
       - name: 📦 Publish to NPM
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -235,7 +238,10 @@ jobs:
           name: build-artifacts
           path: .
 
-      - name: 🚀 Publish to GitHub Packages
+      - name: � Install Dependencies
+        run: pnpm install --frozen-lockfile --prod
+
+      - name: �🚀 Publish to GitHub Packages
         id: publish
         continue-on-error: true
         env:
