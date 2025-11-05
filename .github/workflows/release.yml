@@ -1,0 +1,361 @@
+name: 🚀 Release & Publish
+
+# Trigger on version tags and manual workflow dispatch
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8.15.0'
+
+jobs:
+  # Quality Gate - Ensure code quality before release
+  quality-gate:
+    name: 🔍 Quality Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📦 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: 🏗️ Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: 🚀 Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: 📦 Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔍 Lint Code
+        run: pnpm run lint
+
+      - name: 🏗️ Build Project
+        run: pnpm run build
+
+      - name: 🧪 Run Tests
+        run: pnpm run test
+
+      - name: 📊 Test Coverage
+        run: pnpm run test:coverage
+
+      - name: ✅ Verify Build Artifacts
+        run: |
+          ls -la dist/
+          test -f dist/index.js
+          test -f dist/index.d.ts
+          test -f dist/types.d.ts
+
+  # Build and prepare release artifacts
+  build:
+    name: 🏗️ Build Release
+    runs-on: ubuntu-latest
+    needs: quality-gate
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - name: 📦 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: 🏗️ Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: 🚀 Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: 📦 Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔢 Determine Version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            VERSION="${{ github.event.inputs.version }}"
+            TAG="v${VERSION}"
+          else
+            TAG="${{ github.ref_name }}"
+            VERSION="${TAG#v}"
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "📋 Version: ${VERSION}"
+          echo "📋 Tag: ${TAG}"
+
+      - name: 🔄 Update Package Version
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          pnpm version ${{ steps.version.outputs.version }} --no-git-tag-version
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add package.json
+          git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
+
+      - name: 🏗️ Build Project
+        run: pnpm run build
+
+      - name: 📦 Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            dist/
+            package.json
+            README.md
+            LICENSE
+          retention-days: 5
+
+  # Publish to NPM Registry
+  publish-npm:
+    name: 📦 Publish to NPM
+    runs-on: ubuntu-latest
+    needs: build
+    environment: npm-release
+    steps:
+      - name: 📦 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: 📥 Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: .
+
+      - name: 🔄 Update Package Version
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          pnpm version ${{ needs.build.outputs.version }} --no-git-tag-version
+
+      - name: 🚀 Publish to NPM
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [[ "${{ github.event.inputs.prerelease }}" == "true" ]]; then
+            pnpm publish --tag beta --access public
+            echo "📦 Published as beta release to NPM"
+          else
+            pnpm publish --access public
+            echo "📦 Published to NPM"
+          fi
+
+  # Publish to GitHub Packages
+  publish-github:
+    name: 📦 Publish to GitHub Packages
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: 📦 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@wgtechlabs'
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: 📥 Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: .
+
+      - name: 🔄 Configure for GitHub Packages
+        run: |
+          # Update package name for GitHub Packages
+          jq '.name = "@wgtechlabs/is-railway"' package.json > package.json.tmp
+          mv package.json.tmp package.json
+          
+          # Update version if manual dispatch
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            jq --arg version "${{ needs.build.outputs.version }}" '.version = $version' package.json > package.json.tmp
+            mv package.json.tmp package.json
+          fi
+          
+          echo "📋 Updated package.json for GitHub Packages:"
+          cat package.json | jq '.name, .version'
+
+      - name: 🚀 Publish to GitHub Packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ "${{ github.event.inputs.prerelease }}" == "true" ]]; then
+            pnpm publish --tag beta
+            echo "📦 Published as beta release to GitHub Packages"
+          else
+            pnpm publish
+            echo "📦 Published to GitHub Packages"
+          fi
+
+  # Create GitHub Release
+  github-release:
+    name: 🏷️ Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [build, publish-npm, publish-github]
+    permissions:
+      contents: write
+    steps:
+      - name: 📦 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🏷️ Create Git Tag
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag -a ${{ needs.build.outputs.tag }} -m "Release ${{ needs.build.outputs.tag }}"
+          git push origin ${{ needs.build.outputs.tag }}
+
+      - name: 📝 Generate Release Notes
+        id: release_notes
+        run: |
+          # Get the previous tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+          
+          if [[ -n "$PREVIOUS_TAG" ]]; then
+            echo "📋 Generating changelog from $PREVIOUS_TAG to ${{ needs.build.outputs.tag }}"
+            CHANGELOG=$(git log --pretty=format:"- %s" $PREVIOUS_TAG..${{ needs.build.outputs.tag }})
+          else
+            echo "📋 First release - using recent commits"
+            CHANGELOG=$(git log --pretty=format:"- %s" -10)
+          fi
+          
+          # Create release notes
+          cat > release_notes.md << EOF
+          ## 🚂 is-railway ${{ needs.build.outputs.version }}
+          
+          Railway environment detection SDK for Node.js applications.
+          
+          ### 📦 Installation
+          
+          \`\`\`bash
+          # NPM Registry
+          npm install is-railway
+          
+          # GitHub Packages
+          npm install @wgtechlabs/is-railway --registry=https://npm.pkg.github.com
+          \`\`\`
+          
+          ### 🔄 Changes
+          
+          $CHANGELOG
+          
+          ### 🔗 Package Links
+          
+          - 📦 [NPM Package](https://www.npmjs.com/package/is-railway)
+          - 📦 [GitHub Package](https://github.com/wgtechlabs/is-railway/packages)
+          - 📚 [Documentation](https://github.com/wgtechlabs/is-railway#readme)
+          
+          ---
+          
+          *Automated release by GitHub Actions 🤖*
+          EOF
+          
+          echo "release_notes_path=release_notes.md" >> $GITHUB_OUTPUT
+
+      - name: 🚀 Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.build.outputs.tag }}
+          name: 🚂 is-railway ${{ needs.build.outputs.version }}
+          body_path: ${{ steps.release_notes.outputs.release_notes_path }}
+          draft: false
+          prerelease: ${{ github.event.inputs.prerelease == 'true' }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Notification job
+  notify:
+    name: 📢 Release Notification
+    runs-on: ubuntu-latest
+    needs: [build, publish-npm, publish-github, github-release]
+    if: always()
+    steps:
+      - name: 📢 Success Notification
+        if: needs.github-release.result == 'success'
+        run: |
+          echo "🎉 Successfully released is-railway ${{ needs.build.outputs.version }}!"
+          echo "📦 NPM: https://www.npmjs.com/package/is-railway"
+          echo "📦 GitHub: https://github.com/wgtechlabs/is-railway/packages"
+          echo "🏷️ Release: https://github.com/wgtechlabs/is-railway/releases/tag/${{ needs.build.outputs.tag }}"
+
+      - name: ❌ Failure Notification
+        if: needs.github-release.result == 'failure' || needs.publish-npm.result == 'failure' || needs.publish-github.result == 'failure'
+        run: |
+          echo "❌ Release failed for is-railway ${{ needs.build.outputs.version }}"
+          echo "🔍 Check the workflow logs for details"
+          exit 1
