@@ -55,7 +55,7 @@ describe('is-railway', () => {
 
   describe('isRailway', () => {
     it('should return true when Railway environment variables are present', () => {
-      process.env.DATABASE_URL = 'postgres://user:pass@postgres.railway.internal:5432/db';
+      process.env.POSTGRES_URL = 'postgres://user:pass@postgres.railway.internal:5432/db';
       expect(isRailway()).toBe(true);
     });
 
@@ -65,7 +65,7 @@ describe('is-railway', () => {
     });
 
     it('should return false when no Railway variables are present', () => {
-      process.env.DATABASE_URL = 'postgres://localhost:5432/db';
+      process.env.POSTGRES_URL = 'postgres://localhost:5432/db';
       process.env.REDIS_URL = 'redis://localhost:6379';
       expect(isRailway()).toBe(false);
     });
@@ -79,20 +79,20 @@ describe('is-railway', () => {
 
   describe('getRailwayDetection', () => {
     it('should return detailed detection information', () => {
-      process.env.DATABASE_URL = 'postgres://user:pass@postgres.railway.internal:5432/db';
+      process.env.POSTGRES_URL = 'postgres://user:pass@postgres.railway.internal:5432/db';
       process.env.REDIS_URL = 'redis://redis.railway.internal:6379';
       
       const detection = getRailwayDetection();
       
       expect(detection.isRailway).toBe(true);
-      expect(detection.detectedVars).toContain('DATABASE_URL');
+      expect(detection.detectedVars).toContain('POSTGRES_URL');
       expect(detection.detectedVars).toContain('REDIS_URL');
       expect(detection.railwayHosts).toContain('postgres.railway.internal');
       expect(detection.railwayHosts).toContain('redis.railway.internal');
     });
 
     it('should handle no Railway detection', () => {
-      process.env.DATABASE_URL = 'postgres://localhost:5432/db';
+      process.env.POSTGRES_URL = 'postgres://localhost:5432/db';
       
       const detection = getRailwayDetection();
       
@@ -158,8 +158,8 @@ describe('is-railway', () => {
   });
 
   describe('logging behavior', () => {
-    let logEngineWarnSpy: any;
-    let logEngineInfoSpy: any;
+    let logEngineWarnSpy: ReturnType<typeof vi.spyOn>;
+    let logEngineInfoSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
       logEngineWarnSpy = vi.spyOn(LogEngine, 'warn').mockImplementation(() => {});
@@ -172,7 +172,7 @@ describe('is-railway', () => {
     });
 
     it('should warn when overriding rejectUnauthorized on Railway', () => {
-      process.env.DATABASE_URL = 'postgres://user:pass@postgres.railway.internal:5432/db';
+      process.env.POSTGRES_URL = 'postgres://user:pass@postgres.railway.internal:5432/db';
       
       getPostgresConfig('postgres://user:pass@postgres.railway.internal:5432/db', {
         rejectUnauthorized: true
@@ -227,7 +227,7 @@ describe('is-railway', () => {
 
   describe('getRailwayConfig', () => {
     it('should return Railway configuration when detected', () => {
-      process.env.DATABASE_URL = 'postgres://user:pass@postgres.railway.internal:5432/db';
+      process.env.POSTGRES_URL = 'postgres://user:pass@postgres.railway.internal:5432/db';
       
       const config = getRailwayConfig();
       
@@ -235,7 +235,7 @@ describe('is-railway', () => {
       expect(config.environment).toBe('railway');
       expect(config.ssl.enabled).toBe(true);
       expect(config.ssl.rejectUnauthorized).toBe(false);
-      expect(config.detectedServices).toContain('DATABASE_URL');
+      expect(config.detectedServices).toContain('POSTGRES_URL');
     });
 
     it('should return local configuration when Railway not detected', () => {
