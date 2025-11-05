@@ -1,0 +1,96 @@
+name: 🔄 Sync GitHub Packages
+
+# Manual workflow to publish a specific version to GitHub Packages
+# Useful when NPM succeeded but GitHub Packages failed
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish to GitHub Packages (e.g., 1.0.0)'
+        required: true
+        type: string
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8.15.0'
+
+jobs:
+  sync-to-github-packages:
+    name: 📦 Sync to GitHub Packages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: 📦 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: v${{ github.event.inputs.version }}
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@wgtechlabs'
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: 📦 Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏗️ Build Project
+        run: pnpm run build
+
+      - name: ✅ Verify Version
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          TARGET_VERSION="${{ github.event.inputs.version }}"
+          
+          echo "📋 Package.json version: $PACKAGE_VERSION"
+          echo "📋 Target version: $TARGET_VERSION"
+          
+          if [ "$PACKAGE_VERSION" != "$TARGET_VERSION" ]; then
+            echo "❌ Version mismatch! Package.json has $PACKAGE_VERSION but you requested $TARGET_VERSION"
+            exit 1
+          fi
+          
+          echo "✅ Version verified: $PACKAGE_VERSION"
+
+      - name: 🔍 Check if Already Published
+        id: check
+        continue-on-error: true
+        run: |
+          # Try to get package info from GitHub Packages
+          npm view @wgtechlabs/is-railway@${{ github.event.inputs.version }} --registry=https://npm.pkg.github.com
+          
+      - name: 📦 Publish to GitHub Packages
+        if: steps.check.outcome == 'failure'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "📦 Publishing @wgtechlabs/is-railway@${{ github.event.inputs.version }} to GitHub Packages..."
+          pnpm publish --no-git-checks
+          echo "✅ Successfully published to GitHub Packages!"
+
+      - name: ⚠️ Already Published
+        if: steps.check.outcome == 'success'
+        run: |
+          echo "⚠️ Version ${{ github.event.inputs.version }} already exists on GitHub Packages"
+          echo "📦 No action needed - package is already synced"
+
+      - name: 📢 Summary
+        if: always()
+        run: |
+          echo "## 🔄 Sync Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ steps.check.outcome == 'failure' && 'Published ✅' || 'Already Exists ⚠️' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Package Links" >> $GITHUB_STEP_SUMMARY
+          echo "- [NPM Package](https://www.npmjs.com/package/@wgtechlabs/is-railway/v/${{ github.event.inputs.version }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [GitHub Package](https://github.com/wgtechlabs/is-railway/packages)" >> $GITHUB_STEP_SUMMARY

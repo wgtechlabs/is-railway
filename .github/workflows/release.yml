@@ -137,11 +137,18 @@ jobs:
       - name: 🔄 Update Package Version
         if: github.event_name == 'workflow_dispatch'
         run: |
-          pnpm version ${{ steps.version.outputs.version }} --no-git-tag-version
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add package.json
-          git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          TARGET_VERSION="${{ steps.version.outputs.version }}"
+          
+          if [ "$CURRENT_VERSION" != "$TARGET_VERSION" ]; then
+            pnpm version $TARGET_VERSION --no-git-tag-version
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git add package.json
+            git commit -m "chore: bump version to $TARGET_VERSION"
+          else
+            echo "⚠️ Version already at $TARGET_VERSION, skipping update"
+          fi
 
       - name: 🏗️ Build Project
         run: pnpm run build
@@ -185,12 +192,7 @@ jobs:
           name: build-artifacts
           path: .
 
-      - name: 🔄 Update Package Version
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          pnpm version ${{ needs.build.outputs.version }} --no-git-tag-version
-
-      - name: 🚀 Publish to NPM
+      - name:  Publish to NPM
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
@@ -206,7 +208,7 @@ jobs:
   publish-github:
     name: 📦 Publish to GitHub Packages
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build, publish-npm]  # Sequential: wait for NPM to succeed
     permissions:
       contents: read
       packages: write
@@ -233,7 +235,9 @@ jobs:
           name: build-artifacts
           path: .
 
-      - name:  Publish to GitHub Packages
+      - name: 🚀 Publish to GitHub Packages
+        id: publish
+        continue-on-error: true
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -244,6 +248,21 @@ jobs:
             pnpm publish
             echo "📦 Published to GitHub Packages"
           fi
+
+      - name: ⚠️ GitHub Packages Failed - Manual Recovery Needed
+        if: steps.publish.outcome == 'failure'
+        run: |
+          echo "::warning::GitHub Packages publish failed!"
+          echo ""
+          echo "📦 NPM publish succeeded, but GitHub Packages failed."
+          echo "🔄 To recover, manually run the 'Sync GH Packages' workflow:"
+          echo ""
+          echo "1. Go to: Actions → 🔄 Sync GH Packages"
+          echo "2. Click 'Run workflow'"
+          echo "3. Enter version: ${{ needs.build.outputs.version }}"
+          echo ""
+          echo "Or use this direct link:"
+          echo "https://github.com/${{ github.repository }}/actions/workflows/tools/sync-gh-packages.yml"
 
   # Create GitHub Release
   github-release:
