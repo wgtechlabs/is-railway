@@ -233,22 +233,7 @@ jobs:
           name: build-artifacts
           path: .
 
-      - name: 🔄 Configure for GitHub Packages
-        run: |
-          # Update package name for GitHub Packages
-          jq '.name = "@wgtechlabs/is-railway"' package.json > package.json.tmp
-          mv package.json.tmp package.json
-          
-          # Update version if manual dispatch
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            jq --arg version "${{ needs.build.outputs.version }}" '.version = $version' package.json > package.json.tmp
-            mv package.json.tmp package.json
-          fi
-          
-          echo "📋 Updated package.json for GitHub Packages:"
-          cat package.json | jq '.name, .version'
-
-      - name: 🚀 Publish to GitHub Packages
+      - name:  Publish to GitHub Packages
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -305,7 +290,7 @@ jobs:
           
           \`\`\`bash
           # NPM Registry
-          npm install is-railway
+          npm install @wgtechlabs/is-railway
           
           # GitHub Packages
           npm install @wgtechlabs/is-railway --registry=https://npm.pkg.github.com
@@ -317,7 +302,7 @@ jobs:
           
           ### 🔗 Package Links
           
-          - 📦 [NPM Package](https://www.npmjs.com/package/is-railway)
+          - 📦 [NPM Package](https://www.npmjs.com/package/@wgtechlabs/is-railway)
           - 📦 [GitHub Package](https://github.com/wgtechlabs/is-railway/packages)
           - 📚 [Documentation](https://github.com/wgtechlabs/is-railway#readme)
           
@@ -348,14 +333,14 @@ jobs:
       - name: 📢 Success Notification
         if: needs.github-release.result == 'success'
         run: |
-          echo "🎉 Successfully released is-railway ${{ needs.build.outputs.version }}!"
-          echo "📦 NPM: https://www.npmjs.com/package/is-railway"
+          echo "🎉 Successfully released @wgtechlabs/is-railway ${{ needs.build.outputs.version }}!"
+          echo "📦 NPM: https://www.npmjs.com/package/@wgtechlabs/is-railway"
           echo "📦 GitHub: https://github.com/wgtechlabs/is-railway/packages"
           echo "🏷️ Release: https://github.com/wgtechlabs/is-railway/releases/tag/${{ needs.build.outputs.tag }}"
 
       - name: ❌ Failure Notification
         if: needs.github-release.result == 'failure' || needs.publish-npm.result == 'failure' || needs.publish-github.result == 'failure'
         run: |
-          echo "❌ Release failed for is-railway ${{ needs.build.outputs.version }}"
+          echo "❌ Release failed for @wgtechlabs/is-railway ${{ needs.build.outputs.version }}"
           echo "🔍 Check the workflow logs for details"
           exit 1

@@ -17,19 +17,19 @@ A lightweight, intelligent SDK for detecting Railway environment in Node.js appl
 
 ```bash
 # Using pnpm (recommended)
-pnpm add is-railway
+pnpm add @wgtechlabs/is-railway
 
 # Using npm
-npm install is-railway
+npm install @wgtechlabs/is-railway
 
 # Using yarn
-yarn add is-railway
+yarn add @wgtechlabs/is-railway
 ```
 
 ## 🚀 Quick Start
 
 ```typescript
-import { isRailway, getPostgresConfig } from 'is-railway';
+import { isRailway, getPostgresConfig } from '@wgtechlabs/is-railway';
 
 // Check if running on Railway
 if (isRailway()) {
@@ -53,7 +53,7 @@ if (isRailway()) {
 Detects if the current environment is Railway by checking for `railway.internal` hostnames in common environment variables.
 
 ```typescript
-import { isRailway } from 'is-railway';
+import { isRailway } from '@wgtechlabs/is-railway';
 
 if (isRailway()) {
   // Configure for Railway environment
@@ -65,7 +65,7 @@ if (isRailway()) {
 Check if a specific URL is hosted on Railway.
 
 ```typescript
-import { isRailwayHost } from 'is-railway';
+import { isRailwayHost } from '@wgtechlabs/is-railway';
 
 const isRailwayDB = isRailwayHost(process.env.DATABASE_URL);
 ```
@@ -75,7 +75,7 @@ const isRailwayDB = isRailwayHost(process.env.DATABASE_URL);
 Get Railway-optimized PostgreSQL configuration.
 
 ```typescript
-import { getPostgresConfig } from 'is-railway';
+import { getPostgresConfig } from '@wgtechlabs/is-railway';
 
 const config = getPostgresConfig(process.env.DATABASE_URL, {
   rejectUnauthorized: false, // Default for Railway
@@ -95,7 +95,7 @@ const pool = new Pool({
 Get detailed Railway detection information.
 
 ```typescript
-import { getRailwayDetection } from 'is-railway';
+import { getRailwayDetection } from '@wgtechlabs/is-railway';
 
 const detection = getRailwayDetection();
 console.log('Railway detected:', detection.isRailway);
@@ -108,7 +108,7 @@ console.log('Railway hosts:', detection.railwayHosts);
 Get comprehensive Railway environment configuration.
 
 ```typescript
-import { getRailwayConfig } from 'is-railway';
+import { getRailwayConfig } from '@wgtechlabs/is-railway';
 
 const config = getRailwayConfig();
 console.log('Environment:', config.environment); // 'railway' or 'local'
@@ -129,7 +129,7 @@ These variables are checked for `railway.internal` hostnames to determine Railwa
 ### PostgreSQL with Custom SSL Configuration
 
 ```typescript
-import { getPostgresConfig } from 'is-railway';
+import { getPostgresConfig } from '@wgtechlabs/is-railway';
 
 // Custom SSL configuration
 const config = getPostgresConfig(process.env.POSTGRES_URL, {
@@ -149,7 +149,7 @@ const pool = new Pool({
 ### Environment-Specific Application Configuration
 
 ```typescript
-import { isRailway, getRailwayConfig } from 'is-railway';
+import { isRailway, getRailwayConfig } from '@wgtechlabs/is-railway';
 
 const railwayConfig = getRailwayConfig();
 
@@ -176,7 +176,7 @@ const appConfig = {
 ### Smart Database Connection Manager
 
 ```typescript
-import { isRailway, getPostgresConfig } from 'is-railway';
+import { isRailway, getPostgresConfig } from '@wgtechlabs/is-railway';
 import { Pool } from 'pg';
 
 class DatabaseManager {
@@ -247,7 +247,7 @@ import {
   getPostgresConfig, 
   type PostgresConfig, 
   type RailwayDetectionResult 
-} from 'is-railway';
+} from '@wgtechlabs/is-railway';
 
 const config: PostgresConfig = getPostgresConfig(connectionString);
 const detection: RailwayDetectionResult = getRailwayDetection();
@@ -259,7 +259,7 @@ const detection: RailwayDetectionResult = getRailwayDetection();
 
 ```typescript
 import { Pool } from 'pg';
-import { getPostgresConfig } from 'is-railway';
+import { getPostgresConfig } from '@wgtechlabs/is-railway';
 
 const config = getPostgresConfig(process.env.DATABASE_URL);
 const pool = new Pool({
@@ -271,7 +271,7 @@ const pool = new Pool({
 ### Conditional Configuration
 
 ```typescript
-import { isRailway } from 'is-railway';
+import { isRailway } from '@wgtechlabs/is-railway';
 
 const config = {
   port: process.env.PORT || 3000,
@@ -283,7 +283,7 @@ const config = {
 ### Environment-Specific Logic
 
 ```typescript
-import { getRailwayConfig } from 'is-railway';
+import { getRailwayConfig } from '@wgtechlabs/is-railway';
 
 const { environment, isRailway } = getRailwayConfig();
 

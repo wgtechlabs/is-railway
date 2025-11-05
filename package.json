@@ -1,5 +1,5 @@
 {
-  "name": "is-railway",
+  "name": "@wgtechlabs/is-railway",
   "version": "1.0.0",
   "description": "Simple Railway environment detection SDK for Node.js applications",
   "main": "dist/index.js",
