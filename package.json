@@ -15,7 +15,7 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src/**/*.ts",
-    "clean": "rimraf dist",
+    "clean": "node -e \"const fs = require('fs'); try { fs.rmSync('dist', { recursive: true, force: true }); console.log('✨ Cleaned dist directory'); } catch (e) { console.log('✨ No dist directory to clean'); }\"",
     "prepublishOnly": "pnpm run clean && pnpm run build && pnpm test"
   },
   "packageManager": "pnpm@8.15.0",
@@ -55,7 +55,6 @@
     "@vitest/coverage-v8": "3.2.4",
     "eslint": "^9.36.0",
     "only-allow": "^1.2.1",
-    "rimraf": "^6.0.1",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.46.3",
     "vitest": "^3.2.4"
