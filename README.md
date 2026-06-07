@@ -16,8 +16,8 @@ A lightweight, intelligent SDK for detecting Railway environment in Node.js appl
 ## 📦 Installation
 
 ```bash
-# Using pnpm (recommended)
-pnpm add @wgtechlabs/is-railway
+# Using Bun
+bun add @wgtechlabs/is-railway
 
 # Using npm
 npm install @wgtechlabs/is-railway
@@ -300,33 +300,33 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ### Development
 
-This project uses **pnpm** as the package manager for development:
+This project uses **Bun** as the package manager for development:
 
 ```bash
 # Install dependencies
-pnpm install
+bun install
 
 # Build the project
-pnpm build
+bun run build
 
 # Run tests
-pnpm test
+bun run test
 
 # Run tests in watch mode
-pnpm test:watch
+bun run test:watch
 
 # Run linter
-pnpm lint
+bun run lint
 
 # Development with auto-rebuild
-pnpm dev
+bun run dev
 ```
 
 ### Publishing
 
 ```bash
 # This will clean, build, test, and publish
-pnpm publish
+bun publish
 ```
 
 ## License
