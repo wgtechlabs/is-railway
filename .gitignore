@@ -4,6 +4,10 @@ node_modules/
 # pnpm
 .pnpm-debug.log*
 
+# bun
+bun.lockb
+.bun-debug.log*
+
 # Build outputs
 dist/
 build/
