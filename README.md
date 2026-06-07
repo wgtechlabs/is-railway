@@ -1,5 +1,8 @@
 # is-railway 🚂
 
+[![is-railway - GitHub Repo Banner](https://ghb.waren.build/banner?header=is-railway+%F0%9F%9A%82&subheader=Smart+Railway+environment+detection+for+Node.js+apps&bg=013B84-016EEA&color=FFFFFF)](https://github.com/wgtechlabs/is-railway)
+<!-- Created with GitHub Repo Banner by Waren Gonzaga: https://ghrb.waren.build -->
+
 A lightweight, intelligent SDK for detecting Railway environment in Node.js applications and automatically configuring PostgreSQL connections for Railway compatibility.
 
 ## ✨ Features
