@@ -93,7 +93,7 @@ is-railway/
 
    ```bash
    git add .
-   git commit -m "feat: add your feature description"
+   git commit -m "📦 new: add your feature description"
    git push origin feature/your-feature-name
    ```
 
