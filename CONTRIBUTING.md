@@ -78,9 +78,9 @@ is-railway/
 
 2. **Make your changes**
 
-- Follow the existing code style
-- Add tests for new functionality
-- Update documentation if needed
+   - Follow the existing code style
+   - Add tests for new functionality
+   - Update documentation if needed
 
 3. **Test your changes**
 

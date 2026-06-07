@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-flow:
-    uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@v1
+    uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@v0.1.1
     secrets: inherit
     with:
       ci-profile: node-bun
@@ -18,5 +18,5 @@ jobs:
       ci-lint-command: bun run lint
       ci-test-command: bun run test
       ci-build-command: bun run build
-      enable-package: true
+      enable-package: false
       enable-release: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
