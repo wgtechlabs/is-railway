@@ -10,7 +10,7 @@
 - **Runtime**: Node.js
 - **Test Framework**: Vitest
 - **Linter**: ESLint
-- **Package Manager**: npm
+- **Package Manager**: Bun
 
 ## Commit Convention
 
