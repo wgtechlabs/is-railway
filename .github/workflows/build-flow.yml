@@ -7,6 +7,12 @@ on:
     branches: [dev, main]
   workflow_dispatch:
 
+permissions:
+  actions: read
+  contents: write
+  packages: write
+  security-events: write
+
 jobs:
   build-flow:
     uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@v0.1.1
