@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   build-flow:
-    uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@v0.1.1
+    uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@main
     secrets: inherit
     with:
       enable-gitleaks: false
