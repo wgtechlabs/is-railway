@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   build-flow:
-    uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@dd48b2031fac2f37f819ca35438b835b324d51b4 # fix/nested-workflow-refs
+    uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@main
     secrets: inherit
     with:
       enable-gitleaks: false
