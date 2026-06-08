@@ -4,14 +4,11 @@ Thank you for your interest in contributing to `is-railway`! This guide will hel
 
 ## Development Setup
 
-This project uses **pnpm** as the package manager. Please ensure you have it installed:
+This project uses **Bun** as the package manager and script runner.
 
 ```bash
-# Install pnpm globally if you haven't already
-npm install -g pnpm
-
-# Or using corepack (Node.js 16.10+)
-corepack enable
+# Install Bun
+curl -fsSL https://bun.sh/install | bash
 ```
 
 ### Getting Started
@@ -26,37 +23,37 @@ corepack enable
 2. **Install dependencies**
 
    ```bash
-   pnpm install
+   bun install
    ```
 
-   > **Note**: The project enforces pnpm usage with a preinstall script. Using npm or yarn will show an error.
+   > **Note**: Use Bun for dependency management and script execution to match CI.
 
 3. **Build the project**
 
    ```bash
-   pnpm build
+   bun run build
    ```
 
 4. **Run tests**
 
    ```bash
-   pnpm test
+   bun run test
    ```
 
 5. **Start development mode**
 
    ```bash
-   pnpm dev
+   bun run dev
    ```
 
 ## Development Scripts
 
-- `pnpm build` - Compile TypeScript to JavaScript
-- `pnpm dev` - Watch mode for development
-- `pnpm test` - Run all tests
-- `pnpm test:watch` - Run tests in watch mode
-- `pnpm lint` - Run ESLint
-- `pnpm clean` - Clean build artifacts
+- `bun run build` - Compile TypeScript to JavaScript
+- `bun run dev` - Watch mode for development
+- `bun run test` - Run all tests
+- `bun run test:watch` - Run tests in watch mode
+- `bun run lint` - Run ESLint
+- `bun run clean` - Clean build artifacts
 
 ## Project Structure
 
@@ -87,16 +84,16 @@ is-railway/
 3. **Test your changes**
 
    ```bash
-   pnpm test
-   pnpm lint
-   pnpm build
+   bun run test
+   bun run lint
+   bun run build
    ```
 
 4. **Commit and push**
 
    ```bash
    git add .
-   git commit -m "feat: add your feature description"
+   git commit -m "📦 new: add your feature description"
    git push origin feature/your-feature-name
    ```
 

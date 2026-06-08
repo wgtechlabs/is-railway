@@ -1,0 +1,30 @@
+name: Build Flow
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev, main]
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+  packages: write
+  security-events: write
+
+jobs:
+  build-flow:
+    uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@v0.1.1
+    secrets: inherit
+    with:
+      enable-gitleaks: false
+      codeql-build-mode: none
+      ci-profile: node-bun
+      ci-runtime-version: '22'
+      ci-install-command: bun install --frozen-lockfile
+      ci-lint-command: bun run lint
+      ci-test-command: bun run test
+      ci-build-command: bun run build
+      enable-package: false
+      enable-release: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
