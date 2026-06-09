@@ -26,5 +26,6 @@ jobs:
       ci-lint-command: bun run lint
       ci-test-command: bun run test
       ci-build-command: bun run build
-      enable-package: false
+      enable-package: ${{ github.event_name == 'push' }}
+      enable-container: false
       enable-release: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
